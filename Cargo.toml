@@ -1,0 +1,16 @@
+[package]
+name = "ai_robot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+robotics_lib = {version = "*", registry = "kellnr"}
+worldgen_unwrap = {version = "*", registry = "kellnr"}
+ghost_journey_journal = { version="*", registry = "kellnr" }
+bob_lib = {version = "*", registry = "kellnr"}
+resource-scanner-tool = {version = "*", registry = "kellnr"}
+torch-sys = {path = "../../tch-rs/torch-sys"}
+tch = {path = "../../tch-rs"}
+rand = "0.8.5"
