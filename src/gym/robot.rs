@@ -325,8 +325,8 @@ impl Runnable for GymRobot {
         self.update_dir(world);
     }
 
-    fn handle_event(&mut self, _event: Event) {
-        // TODO
+    fn handle_event(&mut self, event: Event) {
+        self.state.borrow_mut().events.push(event);
     }
 
     fn get_energy(&self) -> &Energy {

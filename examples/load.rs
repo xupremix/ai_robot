@@ -13,6 +13,6 @@ fn main() {
     while !done {
         let new_done = robot.step();
         sleep(Duration::from_millis(1000));
-        done = new_done;
+        done = new_done.0;
     }
 }
