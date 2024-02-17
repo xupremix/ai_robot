@@ -1,13 +1,15 @@
+use std::marker::PhantomData;
+use std::path::PathBuf;
+
+use tch::{CModule, Device};
+use worldgen_unwrap::public::WorldgeneratorUnwrap;
+
 use crate::gym::Gym;
 use crate::model::actor::Actor;
 use crate::model::critic::Critic;
 use crate::model::noise::Noise;
 use crate::prelude::{Agent, DEFAULT_MAP_PATH};
 use crate::robot::{Eval, FieldNotSet, FieldSet, Init, MlRobot, Train};
-use std::marker::PhantomData;
-use std::path::PathBuf;
-use tch::{CModule, Device};
-use worldgen_unwrap::public::WorldgeneratorUnwrap;
 
 impl<M, L> MlRobot<Init, FieldNotSet, M, L, FieldNotSet> {
     pub fn gen_map(

@@ -53,20 +53,30 @@ impl GymRobot {
         }
     }
     fn step(&mut self, world: &mut World) {
-        let action = self.state.borrow().action;
-        println!("Moving: {action}");
-        let _ = match action {
-            0 => go(self, world, Direction::Up),
-            1 => go(self, world, Direction::Right),
-            2 => go(self, world, Direction::Down),
-            _ => go(self, world, Direction::Left),
-        };
-        self.update_dir(world);
+        let mut action = self.state.borrow().action;
         let reward = if self.state.borrow().dir[action as usize] == 1.0 {
             REWARD
         } else {
             REWARD_FOR_ILLEGAL_ACTION
         };
+        if self
+            .state
+            .borrow()
+            .dir
+            .iter()
+            .position(|e| *e == 1.0)
+            .is_none()
+        {
+            action = thread_rng().gen_range(0..4);
+        }
+        let dir = match action {
+            0 => Direction::Up,
+            1 => Direction::Right,
+            2 => Direction::Down,
+            _ => Direction::Left,
+        };
+        eprintln!("Moving: {dir:?}");
+        let _ = go(self, world, dir);
         self.state.borrow_mut().reward = reward;
     }
     fn manual_action(&mut self, world: &mut World) {
@@ -88,8 +98,11 @@ impl GymRobot {
                     None => {}
                     Some(tile) => match &tile.content {
                         Content::Coin(amt) => {
-                            eprintln!("Destroying a coin: {direction:?}");
-                            let _ = destroy(self, world, direction);
+                            eprintln!("Destroy: {direction:?}");
+                            let ris = destroy(self, world, direction);
+                            if ris.is_err() {
+                                eprintln!("Failed to destroy");
+                            }
                             self.coins_destroyed += amt;
                             return;
                         }
@@ -102,9 +115,11 @@ impl GymRobot {
                             if amt == 0 {
                                 continue;
                             }
-                            eprintln!("Putting a coin: {direction:?}");
+                            eprintln!("Put: {direction:?}");
                             if let Ok(amt) = put(self, world, Content::Coin(0), amt, direction) {
                                 self.coins_stored += amt;
+                            } else {
+                                eprintln!("Failed to put");
                             }
                             return;
                         }
@@ -129,6 +144,7 @@ impl GymRobot {
                 _ => Pattern::DiagonalStar(5),
             };
             let mut scanner = ResourceScanner {};
+            eprintln!("Special Scan");
             if let Err(_) = scanner.scan(world, self, pattern, Content::Coin(0)) {
                 self.normal_scan = true;
             }
@@ -143,7 +159,7 @@ impl GymRobot {
                     2 => Direction::Down,
                     _ => Direction::Left,
                 };
-                eprintln!("Performing a scan: {dir:?}");
+                eprintln!("Scanning: {dir:?}, {distance}");
                 let _ = one_direction_view(self, world, dir, distance);
             } else {
                 self.step(world);
@@ -168,7 +184,6 @@ impl GymRobot {
 
         // update the dir based on danger and where the closest target is
         let mut available_indexes: HashSet<usize> = HashSet::from([0, 1, 2, 3]);
-        let mut found_adj = false;
         for (i, row) in surroundings.iter().enumerate() {
             for (j, tile) in row.iter().enumerate() {
                 if ((i as i32 - 1).abs() + (j as i32 - 1).abs()) % 2 == 0 {
@@ -181,7 +196,6 @@ impl GymRobot {
                     Some(tile) => match &tile.content {
                         Content::Coin(_) => {
                             self.turn = false;
-                            found_adj = true;
                         }
                         Content::Bank(range) => {
                             if *self
@@ -193,7 +207,6 @@ impl GymRobot {
                                 && !range.is_empty()
                             {
                                 self.turn = false;
-                                found_adj = true;
                             }
                         }
                         _ => {
@@ -216,19 +229,20 @@ impl GymRobot {
                     self.state.borrow_mut().dir[idx] = 1.0;
                 }
             };
-        if !found_adj {
-            // get the closest coin which is not adjacent
-            if let Some((i, j)) = closest_coin {
+        // get the closest coin which is not adjacent
+        if let Some((i, j)) = closest_coin {
+            if i != robot_i || j != robot_j {
                 update_idx(i, robot_i, j, robot_j);
             }
-            if let Some((i, j)) = closest_bank {
-                if *self
-                    .get_backpack()
-                    .get_contents()
-                    .get(&Content::Coin(0))
-                    .unwrap()
-                    > 0
-                {
+        } else if let Some((i, j)) = closest_bank {
+            if *self
+                .get_backpack()
+                .get_contents()
+                .get(&Content::Coin(0))
+                .unwrap()
+                > 0
+            {
+                if i != robot_i || j != robot_j {
                     update_idx(i, robot_i, j, robot_j);
                 }
             }
@@ -256,8 +270,10 @@ fn to_idx(i: usize, j: usize) -> usize {
 impl Runnable for GymRobot {
     fn process_tick(&mut self, world: &mut World) {
         // set up the state if it's the first game tick
+        eprintln!("-------------------------");
+        eprintln!("Energy level: {}", self.get_energy().get_energy_level());
+        eprintln!("Dir: {:?}", self.state.borrow().dir);
         if self.setup {
-            self.update_dir(world);
             self.setup = false;
         } else if self.turn {
             self.step(world);
@@ -273,8 +289,8 @@ impl Runnable for GymRobot {
                 self.state.borrow_mut().done = true;
             }
             self.turn = true;
-            self.update_dir(world);
         }
+        self.update_dir(world);
     }
 
     fn handle_event(&mut self, _event: Event) {

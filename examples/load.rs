@@ -1,15 +1,18 @@
 use ai_robot::prelude::MlRobot;
+use std::thread::sleep;
+use std::time::Duration;
 
 fn main() {
     let mut robot = MlRobot::new()
         .set_log("src/save/logs/data.log")
-        .set_map("src/save/maps/coin_bank_adj_map.bin", 40, 40)
-        .load_model("src/save/models/model.pt")
+        .set_map("src/save/maps/DL_D_DD_D_D_DD_L_DLD_D_P_LLLL.bin", 6, 5)
+        .load_model("src/save/models/exam_ready_model.pt")
         .build();
-    robot.reset();
     let mut done = false;
+    robot.reset();
     while !done {
         let new_done = robot.step();
+        sleep(Duration::from_millis(6000));
         done = new_done;
     }
 }

@@ -23,7 +23,7 @@ impl Gym {
         coins_stored_goal: usize,
     ) -> Self {
         let state = Rc::new(RefCell::new(State::default()));
-        let mut runner = Runner::new(
+        let runner = Runner::new(
             Box::new(GymRobot::new(
                 state.clone(),
                 coins_destroyed_goal,
@@ -32,7 +32,6 @@ impl Gym {
             &mut generator,
         )
         .unwrap();
-        runner.game_tick().unwrap();
         Self {
             state,
             generator,

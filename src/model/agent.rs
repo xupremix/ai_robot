@@ -71,6 +71,7 @@ impl Agent {
 
         let diff = q_target - q;
         let critic_loss = (&diff * &diff).mean(Float);
+        eprintln!("Critic Loss: {critic_loss:?}");
 
         self.critic.optimizer_mut().zero_grad();
         critic_loss.backward();
@@ -81,6 +82,7 @@ impl Agent {
             .critic
             .forward(&states, &self.actor.forward(&states))
             .mean(Float);
+        eprintln!("Actor Loss: {actor_loss:?}");
 
         self.actor.optimizer_mut().zero_grad();
         actor_loss.backward();
