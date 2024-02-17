@@ -1,4 +1,5 @@
 use ai_robot::prelude::MlRobot;
+
 fn main() {
     let mut robot = MlRobot::new()
         .set_log(true)

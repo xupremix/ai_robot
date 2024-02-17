@@ -1,4 +1,9 @@
 use robotics_lib::world::tile::Content;
+
+// Re-Exports
+pub use crate::model::agent::Agent;
+pub use crate::robot::{Eval, FieldNotSet, FieldSet, Init, MlRobot, Train};
+
 pub const ACTOR_LR: f64 = 0.001;
 pub const CRITIC_LR: f64 = 0.002;
 pub const OBSERVATION_SPACE: i64 = 4;
@@ -17,6 +22,4 @@ pub const REWARD: f64 = -2.0;
 pub const REWARD_FOR_ILLEGAL_ACTION: f64 = -10.0;
 pub const CONTENT_TARGETS: [Content; 2] = [Content::Bank(0..0), Content::Coin(0)];
 pub const PERCENTAGE_ENERGY_RESERVED_FOR_SCANNING: f64 = 0.04;
-// Re-Exports
-pub use crate::model::agent::Agent;
-pub use crate::robot::{Eval, FieldNotSet, FieldSet, Init, MlRobot, Train};
+

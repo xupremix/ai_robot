@@ -1,6 +1,7 @@
-use crate::prelude::{ACTION_SPACE, MEM_DIM, OBSERVATION_SPACE};
-use tch::kind::{FLOAT_CPU, FLOAT_CUDA, INT64_CPU, INT64_CUDA};
 use tch::{Cuda, Tensor};
+use tch::kind::{FLOAT_CPU, FLOAT_CUDA, INT64_CPU, INT64_CUDA};
+
+use crate::prelude::{ACTION_SPACE, MEM_DIM, OBSERVATION_SPACE};
 
 pub struct ReplayMemory {
     obs: Tensor,

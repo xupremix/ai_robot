@@ -1,5 +1,6 @@
-use crate::gym::Gym;
 use std::marker::PhantomData;
+
+use crate::gym::Gym;
 
 mod eval;
 mod init;
@@ -7,16 +8,21 @@ mod train;
 
 #[derive(Debug)]
 pub struct FieldNotSet;
+
 #[derive(Debug)]
 pub struct FieldSet<T> {
     data: T,
 }
+
 #[derive(Debug)]
 pub struct Init;
+
 #[derive(Debug)]
 pub struct Train;
+
 #[derive(Debug)]
 pub struct Eval;
+
 #[derive(Debug)]
 pub struct MlRobot<T, S, M, L, G> {
     _state: PhantomData<T>,
@@ -43,6 +49,7 @@ impl<T, S, M, L> MlRobot<T, FieldSet<S>, M, L, Gym> {
         &self.map.data
     }
 }
+
 impl<T, S, M, G> MlRobot<T, S, M, bool, G> {
     pub fn get_log(&self) -> bool {
         self.log

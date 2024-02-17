@@ -1,6 +1,7 @@
-use crate::prelude::{ACTION_SPACE, MU, SIGMA, THETA};
-use tch::kind::{FLOAT_CPU, FLOAT_CUDA};
 use tch::{Cuda, Device, Kind, Tensor};
+use tch::kind::{FLOAT_CPU, FLOAT_CUDA};
+
+use crate::prelude::{ACTION_SPACE, MU, SIGMA, THETA};
 
 pub struct Noise {
     mode: (Kind, Device),
@@ -9,6 +10,7 @@ pub struct Noise {
     sigma: f64,
     mu: f64,
 }
+
 impl Noise {
     pub(crate) fn new() -> Self {
         let mode = if Cuda::is_available() {

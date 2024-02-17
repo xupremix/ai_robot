@@ -1,10 +1,11 @@
-use crate::gym::Gym;
-use crate::robot::{Eval, FieldSet, MlRobot};
 use robotics_lib::event::events::Event;
 use robotics_lib::world::tile::Tile;
-use tch::nn::Module;
 use tch::CModule;
 use tch::Kind::Float;
+use tch::nn::Module;
+
+use crate::gym::Gym;
+use crate::robot::{Eval, FieldSet, MlRobot};
 
 impl<S> MlRobot<Eval, FieldSet<S>, CModule, bool, Gym> {
     pub fn step(&mut self) -> (bool, Vec<Event>, Vec<(Tile, (usize, usize))>) {

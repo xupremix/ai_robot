@@ -1,7 +1,8 @@
-use crate::prelude::{ACTION_SPACE, ACTOR_LR, OBSERVATION_SPACE};
 use tch::kind::{FLOAT_CPU, FLOAT_CUDA};
 use tch::nn::{linear, seq, Adam, Optimizer, OptimizerConfig, Sequential, VarStore};
 use tch::{CModule, Cuda, Device, Tensor};
+
+use crate::prelude::{ACTION_SPACE, ACTOR_LR, OBSERVATION_SPACE};
 
 pub struct Actor {
     save_path: String,

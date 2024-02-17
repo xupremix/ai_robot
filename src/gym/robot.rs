@@ -362,6 +362,7 @@ impl GymRobot {
         }
     }
 }
+
 fn to_dir_idx(i: usize, robot_i: usize, j: usize, robot_j: usize) -> usize {
     match (i.cmp(&robot_i), j.cmp(&robot_j)) {
         (Ordering::Less, _) => 0,
@@ -371,6 +372,7 @@ fn to_dir_idx(i: usize, robot_i: usize, j: usize, robot_j: usize) -> usize {
         _ => panic!("Unreachable"),
     }
 }
+
 fn to_idx(i: usize, j: usize) -> usize {
     match (i, j) {
         (0, 1) => 0,
@@ -380,6 +382,7 @@ fn to_idx(i: usize, j: usize) -> usize {
         _ => panic!("Unreachable"),
     }
 }
+
 impl Runnable for GymRobot {
     fn process_tick(&mut self, world: &mut World) {
         if self.setup {

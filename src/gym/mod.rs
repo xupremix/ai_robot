@@ -1,9 +1,11 @@
-use crate::gym::robot::GymRobot;
-use crate::gym::state::State;
-use robotics_lib::runner::Runner;
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use robotics_lib::runner::Runner;
 use worldgen_unwrap::public::WorldgeneratorUnwrap;
+
+use crate::gym::robot::GymRobot;
+use crate::gym::state::State;
 
 mod robot;
 pub mod state;

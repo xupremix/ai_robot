@@ -112,6 +112,7 @@ impl<S> MlRobot<Init, FieldSet<S>, Agent, bool, Gym> {
         }
     }
 }
+
 impl<S> MlRobot<Init, FieldSet<S>, CModule, bool, Gym> {
     pub fn build(self) -> MlRobot<Eval, FieldSet<S>, CModule, bool, Gym> {
         MlRobot {

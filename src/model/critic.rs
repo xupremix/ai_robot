@@ -1,6 +1,7 @@
-use crate::prelude::{ACTION_SPACE, CRITIC_LR, OBSERVATION_SPACE};
-use tch::nn::{linear, seq, Adam, Optimizer, OptimizerConfig, Sequential, VarStore};
 use tch::{Device, Tensor};
+use tch::nn::{Adam, linear, Optimizer, OptimizerConfig, seq, Sequential, VarStore};
+
+use crate::prelude::{ACTION_SPACE, CRITIC_LR, OBSERVATION_SPACE};
 
 pub struct Critic {
     vs: VarStore,

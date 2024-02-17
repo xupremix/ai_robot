@@ -1,7 +1,8 @@
+use tch::Kind::Float;
+
 use crate::gym::Gym;
 use crate::prelude::Agent;
 use crate::robot::{FieldSet, MlRobot, Train};
-use tch::Kind::Float;
 
 impl<S> MlRobot<Train, FieldSet<S>, Agent, bool, Gym> {
     pub fn save(&mut self) {
