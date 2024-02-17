@@ -8,7 +8,6 @@ impl<S, L> MlRobot<Eval, FieldSet<S>, CModule, FieldSet<L>, Gym> {
     // TODO Switch to return the new tiles
     pub fn step(&mut self) -> bool {
         let obs = self.gym.state.borrow().build();
-        eprintln!("{obs:?}");
         let action = self
             .model
             .forward(&obs)
