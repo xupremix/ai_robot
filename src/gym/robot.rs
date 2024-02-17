@@ -59,7 +59,7 @@ impl GymRobot {
             log,
         }
     }
-    fn update_adj_setup(&mut self, world: &mut World) {
+    fn update_scan(&mut self, world: &mut World) {
         let surroundings = robot_view(self, world);
         let robot_i = self.get_coordinate().get_row();
         let robot_j = self.get_coordinate().get_col();
@@ -170,7 +170,7 @@ impl GymRobot {
                             if self.log {
                                 eprintln!("Destroy: {direction:?}");
                             }
-                            let _ = destroy(self, world, direction);
+                            let _ = destroy(self, world, direction.clone());
                             self.coins_destroyed += amt;
                             return;
                         }
@@ -245,7 +245,24 @@ impl GymRobot {
                     if self.log {
                         eprintln!("Scanning: {dir:?}, {distance}");
                     }
-                    let _ = one_direction_view(self, world, dir, distance);
+                    let robot_i = self.get_coordinate().get_row();
+                    let robot_j = self.get_coordinate().get_col();
+                    if let Ok(surr) = one_direction_view(self, world, dir.clone(), distance) {
+                        for (i, row) in surr.iter().enumerate() {
+                            for (j, tile) in row.iter().enumerate() {
+                                let coord = match dir {
+                                    Direction::Up => (robot_i - i - 1, robot_j + j - 1),
+                                    Direction::Down => (robot_i + i + 1, robot_j + j - 1),
+                                    Direction::Left => (robot_i + i - 1, robot_j - j - 1),
+                                    Direction::Right => (robot_i + i - 1, robot_j + j + 1),
+                                };
+                                self.state
+                                    .borrow_mut()
+                                    .new_tiles
+                                    .push((tile.clone(), coord));
+                            }
+                        }
+                    }
                 } else if self.log {
                     eprintln!("Not enough energy for a scan, waiting for a recharge");
                 }
@@ -366,7 +383,7 @@ fn to_idx(i: usize, j: usize) -> usize {
 impl Runnable for GymRobot {
     fn process_tick(&mut self, world: &mut World) {
         if self.setup {
-            self.update_adj_setup(world);
+            self.update_scan(world);
             self.setup = false;
         } else if self.turn {
             self.step(world);
