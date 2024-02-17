@@ -3,7 +3,7 @@ use crate::prelude::Agent;
 use crate::robot::{FieldSet, MlRobot, Train};
 use tch::Kind::Float;
 
-impl<S, L> MlRobot<Train, FieldSet<S>, Agent, FieldSet<L>, Gym> {
+impl<S> MlRobot<Train, FieldSet<S>, Agent, bool, Gym> {
     pub fn save(&mut self) {
         self.model.save();
     }
@@ -15,7 +15,11 @@ impl<S, L> MlRobot<Train, FieldSet<S>, Agent, FieldSet<L>, Gym> {
         train_iterations: usize,
     ) {
         let mut best_rw = f64::MIN;
-        for _ in 0..epochs {
+        for epoch in 0..epochs {
+            if self.log {
+                eprintln!("--------------");
+                eprintln!("Epoch: {} / {}", epoch, epochs);
+            }
             self.gym.reset();
             for _ in 0..max_ep_len {
                 let obs = self.gym.state.borrow().build();
@@ -37,31 +41,53 @@ impl<S, L> MlRobot<Train, FieldSet<S>, Agent, FieldSet<L>, Gym> {
             }
             let mut acc_rw = 0.0;
             self.gym.reset();
-            for _ in 0..max_ep_len {
+            for episode in 0..max_ep_len {
+                if self.log {
+                    eprintln!("------");
+                    eprintln!("Ep: {}", episode);
+                }
                 let obs = self.gym.state.borrow().build();
                 let actions = self.model.actions(&obs);
                 let action = actions.softmax(-1, Float).argmax(-1, true).int64_value(&[]);
                 self.gym.step(action);
                 let reward = self.gym.state.borrow().reward;
                 acc_rw += reward;
+                if self.log {
+                    eprintln!("Dir: {:?}", obs);
+                    eprintln!("Action: {}", action);
+                    eprintln!("Reward: {}", reward);
+                }
                 if self.gym.state.borrow().done {
+                    if self.log {
+                        eprintln!("The robot completed the task");
+                    }
                     break;
                 }
             }
             if acc_rw > best_rw {
                 best_rw = acc_rw;
-                eprintln!("Found a better model");
+                if self.log {
+                    eprintln!("Found a better model, saving to disk");
+                }
                 self.model.save();
             }
         }
     }
     pub fn train_while_discovering(&mut self, epochs: usize, max_ep_len: usize, batch_size: usize) {
         let mut best_rw = f64::MIN;
-        for _ in 0..epochs {
+        for epoch in 0..epochs {
+            if self.log {
+                eprintln!("--------------");
+                eprintln!("Epoch: {} / {}", epoch, epochs);
+            }
             let mut discover = batch_size;
             let mut acc_rw = 0.0;
             self.gym.reset();
-            for i in 0..max_ep_len {
+            for episode in 0..max_ep_len {
+                if self.log {
+                    eprintln!("------");
+                    eprintln!("Ep: {}", episode);
+                }
                 let obs = self.gym.state.borrow().build();
                 let actions = self.model.actions(&obs);
                 let action = actions.softmax(-1, Float).argmax(-1, true).int64_value(&[]);
@@ -74,18 +100,27 @@ impl<S, L> MlRobot<Train, FieldSet<S>, Agent, FieldSet<L>, Gym> {
                     &reward.into(),
                     &self.gym.state.borrow().build(),
                 );
+                if self.log {
+                    eprintln!("Dir: {:?}", obs);
+                    eprintln!("Action: {}", action);
+                    eprintln!("Reward: {}", reward);
+                }
                 if self.gym.state.borrow().done {
-                    eprintln!("The robot completed the task");
+                    if self.log {
+                        eprintln!("The robot completed the task");
+                    }
                     break;
                 }
-                if i > discover {
+                if episode > discover {
                     self.model.train(batch_size);
                     discover += batch_size;
                 }
             }
             if acc_rw > best_rw {
                 best_rw = acc_rw;
-                eprintln!("Found a better model");
+                if self.log {
+                    eprintln!("Found a better model, saving to disk");
+                }
                 self.model.save();
             }
         }

@@ -32,10 +32,14 @@ pub(crate) struct GymRobot {
     normal_scan: bool,
     setup: bool,
     turn: bool,
+    already_scanned: [bool; 4],
+    scan_idx: usize,
+    log: bool,
 }
 
 impl GymRobot {
     pub fn new(
+        log: bool,
         state: Rc<RefCell<State>>,
         coins_destroyed_goal: usize,
         coins_stored_goal: usize,
@@ -50,10 +54,13 @@ impl GymRobot {
             setup: true,
             turn: false,
             normal_scan: false,
+            already_scanned: [false; 4],
+            scan_idx: 0,
+            log,
         }
     }
     fn step(&mut self, world: &mut World) {
-        let mut action = self.state.borrow().action;
+        let action = self.state.borrow().action;
         let reward = if self.state.borrow().dir[action as usize] == 1.0 {
             REWARD
         } else {
@@ -66,8 +73,10 @@ impl GymRobot {
             .iter()
             .position(|e| *e == 1.0)
             .is_none()
+            && thread_rng().gen_bool(0.9)
         {
-            action = thread_rng().gen_range(0..4);
+            self.manual_action(world);
+            return;
         }
         let dir = match action {
             0 => Direction::Up,
@@ -75,7 +84,9 @@ impl GymRobot {
             2 => Direction::Down,
             _ => Direction::Left,
         };
-        eprintln!("Moving: {dir:?}");
+        if self.log {
+            eprintln!("Moving: {:?}", dir);
+        }
         let _ = go(self, world, dir);
         self.state.borrow_mut().reward = reward;
     }
@@ -98,11 +109,10 @@ impl GymRobot {
                     None => {}
                     Some(tile) => match &tile.content {
                         Content::Coin(amt) => {
-                            eprintln!("Destroy: {direction:?}");
-                            let ris = destroy(self, world, direction);
-                            if ris.is_err() {
-                                eprintln!("Failed to destroy");
+                            if self.log {
+                                eprintln!("Destroy: {direction:?}");
                             }
+                            let _ = destroy(self, world, direction);
                             self.coins_destroyed += amt;
                             return;
                         }
@@ -115,11 +125,11 @@ impl GymRobot {
                             if amt == 0 {
                                 continue;
                             }
-                            eprintln!("Put: {direction:?}");
+                            if self.log {
+                                eprintln!("Put: {direction:?}");
+                            }
                             if let Ok(amt) = put(self, world, Content::Coin(0), amt, direction) {
                                 self.coins_stored += amt;
-                            } else {
-                                eprintln!("Failed to put");
                             }
                             return;
                         }
@@ -128,42 +138,63 @@ impl GymRobot {
                 }
             }
         }
-        // we did not find any coins / banks adj -> perform a scan
-        if thread_rng().gen_bool(0.2) && !self.normal_scan {
-            let pattern = match thread_rng().gen_range(0..11) {
-                0 => Pattern::DirectionUp(5),
-                1 => Pattern::DirectionRight(5),
-                2 => Pattern::DirectionDown(5),
-                3 => Pattern::DirectionLeft(5),
-                4 => Pattern::Area(4),
-                5 => Pattern::DiagonalLowerLeft(5),
-                6 => Pattern::DiagonalLowerRight(5),
-                7 => Pattern::DiagonalUpperLeft(5),
-                8 => Pattern::DiagonalUpperRight(5),
-                9 => Pattern::StraightStar(5),
-                _ => Pattern::DiagonalStar(5),
-            };
-            let mut scanner = ResourceScanner {};
-            eprintln!("Special Scan");
-            if let Err(_) = scanner.scan(world, self, pattern, Content::Coin(0)) {
-                self.normal_scan = true;
-            }
-        } else {
-            let distance = (self.get_energy().get_energy_level() as f64 / 3.
-                * PERCENTAGE_ENERGY_RESERVED_FOR_SCANNING)
-                .floor() as usize;
-            if distance > 2 {
-                let dir = match thread_rng().gen_range(0..4) {
-                    0 => Direction::Up,
-                    1 => Direction::Right,
-                    2 => Direction::Down,
-                    _ => Direction::Left,
+        // if we have no info and no adj
+        if self
+            .state
+            .borrow()
+            .dir
+            .iter()
+            .position(|e| *e == 1.0)
+            .is_none()
+        {
+            if thread_rng().gen_bool(0.1) && !self.normal_scan {
+                let pattern = match thread_rng().gen_range(0..11) {
+                    0 => Pattern::DirectionUp(5),
+                    1 => Pattern::DirectionRight(5),
+                    2 => Pattern::DirectionDown(5),
+                    3 => Pattern::DirectionLeft(5),
+                    4 => Pattern::Area(4),
+                    5 => Pattern::DiagonalLowerLeft(5),
+                    6 => Pattern::DiagonalLowerRight(5),
+                    7 => Pattern::DiagonalUpperLeft(5),
+                    8 => Pattern::DiagonalUpperRight(5),
+                    9 => Pattern::StraightStar(5),
+                    _ => Pattern::DiagonalStar(5),
                 };
-                eprintln!("Scanning: {dir:?}, {distance}");
-                let _ = one_direction_view(self, world, dir, distance);
+                let mut scanner = ResourceScanner {};
+                if self.log {
+                    eprintln!("Special Scan");
+                }
+                if let Err(_) = scanner.scan(world, self, pattern, Content::Coin(0)) {
+                    self.normal_scan = true;
+                }
             } else {
-                self.step(world);
+                let distance = (self.get_energy().get_energy_level() as f64 / 3.
+                    * PERCENTAGE_ENERGY_RESERVED_FOR_SCANNING)
+                    .floor() as usize;
+                if distance > 2 {
+                    let dir = match self.scan_idx {
+                        0 => Direction::Up,
+                        1 => Direction::Right,
+                        2 => Direction::Down,
+                        _ => Direction::Left,
+                    };
+                    if self.scan_idx == 3 {
+                        self.already_scanned = [false; 4];
+                    }
+                    self.scan_idx = (self.scan_idx + 1) % 4;
+                    self.already_scanned[self.scan_idx] = true;
+                    if self.log {
+                        eprintln!("Scanning: {dir:?}, {distance}");
+                    }
+                    let _ = one_direction_view(self, world, dir, distance);
+                } else if self.log {
+                    eprintln!("Not enough energy for a scan, waiting for a recharge");
+                }
             }
+        } else if self.log {
+            // we have info but no adj
+            eprintln!("We already have info, no need to scan");
         }
     }
     fn update_dir(&mut self, world: &mut World) {
@@ -231,7 +262,14 @@ impl GymRobot {
             };
         // get the closest coin which is not adjacent
         if let Some((i, j)) = closest_coin {
-            if i != robot_i || j != robot_j {
+            if (i != robot_i || j != robot_j)
+                && *self
+                    .get_backpack()
+                    .get_contents()
+                    .get(&Content::Coin(0))
+                    .unwrap()
+                    < 20
+            {
                 update_idx(i, robot_i, j, robot_j);
             }
         } else if let Some((i, j)) = closest_bank {
@@ -269,10 +307,6 @@ fn to_idx(i: usize, j: usize) -> usize {
 }
 impl Runnable for GymRobot {
     fn process_tick(&mut self, world: &mut World) {
-        // set up the state if it's the first game tick
-        eprintln!("-------------------------");
-        eprintln!("Energy level: {}", self.get_energy().get_energy_level());
-        eprintln!("Dir: {:?}", self.state.borrow().dir);
         if self.setup {
             self.setup = false;
         } else if self.turn {
@@ -282,10 +316,8 @@ impl Runnable for GymRobot {
             // manual action
             self.manual_action(world);
             if self.coins_stored >= self.coins_stored_goal {
-                eprintln!("Completed the coins stored task");
                 self.state.borrow_mut().done = true;
             } else if self.coins_destroyed >= self.coins_destroyed_goal {
-                eprintln!("Completed the coins destroyed task");
                 self.state.borrow_mut().done = true;
             }
             self.turn = true;

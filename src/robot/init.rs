@@ -11,14 +11,14 @@ use crate::model::noise::Noise;
 use crate::prelude::{Agent, DEFAULT_MAP_PATH};
 use crate::robot::{Eval, FieldNotSet, FieldSet, Init, MlRobot, Train};
 
-impl<M, L> MlRobot<Init, FieldNotSet, M, L, FieldNotSet> {
+impl<M> MlRobot<Init, FieldNotSet, M, bool, FieldNotSet> {
     pub fn gen_map(
         self,
         coins_destroyed_goal: usize,
         coins_stored_goal: usize,
-    ) -> MlRobot<Init, FieldSet<String>, M, L, Gym> {
+    ) -> MlRobot<Init, FieldSet<String>, M, bool, Gym> {
         let generator = WorldgeneratorUnwrap::init(true, None);
-        let gym = Gym::new(generator, coins_destroyed_goal, coins_stored_goal);
+        let gym = Gym::new(self.log, generator, coins_destroyed_goal, coins_stored_goal);
         MlRobot {
             _state: PhantomData,
             map: FieldSet {
@@ -34,12 +34,12 @@ impl<M, L> MlRobot<Init, FieldNotSet, M, L, FieldNotSet> {
         map: S,
         coins_destroyed_goal: usize,
         coins_stored_goal: usize,
-    ) -> MlRobot<Init, FieldSet<S>, M, L, Gym>
+    ) -> MlRobot<Init, FieldSet<S>, M, bool, Gym>
     where
         S: Into<PathBuf> + Copy,
     {
         let generator = WorldgeneratorUnwrap::init(false, Some(map.into()));
-        let gym = Gym::new(generator, coins_destroyed_goal, coins_stored_goal);
+        let gym = Gym::new(self.log, generator, coins_destroyed_goal, coins_stored_goal);
         MlRobot {
             _state: PhantomData,
             map: FieldSet { data: map },
@@ -87,22 +87,22 @@ impl<S, L, G> MlRobot<Init, S, FieldNotSet, L, G> {
 }
 
 impl<S, M, G> MlRobot<Init, S, M, FieldNotSet, G> {
-    pub fn set_log<L>(self, log_path: L) -> MlRobot<Init, S, M, FieldSet<L>, G>
+    pub fn set_log<L>(self, log: L) -> MlRobot<Init, S, M, bool, G>
     where
-        L: Into<String> + Copy,
+        L: Into<bool>,
     {
         MlRobot {
             _state: PhantomData,
             map: self.map,
             model: self.model,
-            log: FieldSet { data: log_path },
+            log: log.into(),
             gym: self.gym,
         }
     }
 }
 
-impl<S, L> MlRobot<Init, FieldSet<S>, Agent, FieldSet<L>, Gym> {
-    pub fn build(self) -> MlRobot<Train, FieldSet<S>, Agent, FieldSet<L>, Gym> {
+impl<S> MlRobot<Init, FieldSet<S>, Agent, bool, Gym> {
+    pub fn build(self) -> MlRobot<Train, FieldSet<S>, Agent, bool, Gym> {
         MlRobot {
             _state: PhantomData,
             map: self.map,
@@ -112,8 +112,8 @@ impl<S, L> MlRobot<Init, FieldSet<S>, Agent, FieldSet<L>, Gym> {
         }
     }
 }
-impl<S, L> MlRobot<Init, FieldSet<S>, CModule, FieldSet<L>, Gym> {
-    pub fn build(self) -> MlRobot<Eval, FieldSet<S>, CModule, FieldSet<L>, Gym> {
+impl<S> MlRobot<Init, FieldSet<S>, CModule, bool, Gym> {
+    pub fn build(self) -> MlRobot<Eval, FieldSet<S>, CModule, bool, Gym> {
         MlRobot {
             _state: PhantomData,
             map: self.map,

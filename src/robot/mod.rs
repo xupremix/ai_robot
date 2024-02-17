@@ -1,7 +1,5 @@
 use crate::gym::Gym;
-use crate::prelude::Agent;
 use std::marker::PhantomData;
-use tch::CModule;
 
 mod eval;
 mod init;
@@ -45,18 +43,8 @@ impl<T, S, M, L> MlRobot<T, FieldSet<S>, M, L, Gym> {
         &self.map.data
     }
 }
-impl<T, S, L, G> MlRobot<T, S, Agent, L, G> {
-    pub fn get_model(&self) -> &Agent {
-        &self.model
-    }
-}
-impl<T, S, L, G> MlRobot<T, S, CModule, L, G> {
-    pub fn get_model(&self) -> &CModule {
-        &self.model
-    }
-}
-impl<T, S, M, L, G> MlRobot<T, S, M, FieldSet<L>, G> {
-    pub fn get_log(&self) -> &L {
-        &self.log.data
+impl<T, S, M, G> MlRobot<T, S, M, bool, G> {
+    pub fn get_log(&self) -> bool {
+        self.log
     }
 }
