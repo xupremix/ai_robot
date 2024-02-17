@@ -59,6 +59,21 @@ impl GymRobot {
             log,
         }
     }
+    fn update_adj_setup(&mut self, world: &mut World) {
+        let surroundings = robot_view(self, world);
+        let robot_i = self.get_coordinate().get_row();
+        let robot_j = self.get_coordinate().get_col();
+        for (i, row) in surroundings.iter().enumerate() {
+            for (j, tile) in row.iter().enumerate() {
+                if let Some(tile) = tile {
+                    self.state
+                        .borrow_mut()
+                        .new_tiles
+                        .push((tile.clone(), (robot_i + i - 1, robot_j + j - 1)));
+                }
+            }
+        }
+    }
     fn step(&mut self, world: &mut World) {
         let action = self.state.borrow().action;
         let reward = if self.state.borrow().dir[action as usize] == 1.0 {
@@ -87,7 +102,50 @@ impl GymRobot {
         if self.log {
             eprintln!("Moving: {:?}", dir);
         }
-        let _ = go(self, world, dir);
+        if let Ok((surr, (robot_i, robot_j))) = go(self, world, dir.clone()) {
+            match dir {
+                Direction::Up => {
+                    for j in 0..3 {
+                        if let Some(tile) = &surr[0][j] {
+                            self.state
+                                .borrow_mut()
+                                .new_tiles
+                                .push((tile.clone(), (robot_i - 1, robot_j + j - 1)))
+                        }
+                    }
+                }
+                Direction::Down => {
+                    for j in 0..3 {
+                        if let Some(tile) = &surr[2][j] {
+                            self.state
+                                .borrow_mut()
+                                .new_tiles
+                                .push((tile.clone(), (robot_i + 1, robot_j + j - 1)))
+                        }
+                    }
+                }
+                Direction::Left => {
+                    for i in 0..3 {
+                        if let Some(tile) = &surr[i][0] {
+                            self.state
+                                .borrow_mut()
+                                .new_tiles
+                                .push((tile.clone(), (robot_i + i - 1, robot_j - 1)))
+                        }
+                    }
+                }
+                Direction::Right => {
+                    for i in 0..3 {
+                        if let Some(tile) = &surr[i][2] {
+                            self.state
+                                .borrow_mut()
+                                .new_tiles
+                                .push((tile.clone(), (robot_i + i - 1, robot_j + 1)))
+                        }
+                    }
+                }
+            }
+        }
         self.state.borrow_mut().reward = reward;
     }
     fn manual_action(&mut self, world: &mut World) {
@@ -308,6 +366,7 @@ fn to_idx(i: usize, j: usize) -> usize {
 impl Runnable for GymRobot {
     fn process_tick(&mut self, world: &mut World) {
         if self.setup {
+            self.update_adj_setup(world);
             self.setup = false;
         } else if self.turn {
             self.step(world);
