@@ -3,6 +3,7 @@ use robotics_lib::world::tile::Content;
 // Re-Exports
 pub use crate::model::agent::Agent;
 pub use crate::robot::{Eval, FieldNotSet, FieldSet, Init, MlRobot, Train};
+pub use tch;
 
 pub const ACTOR_LR: f64 = 0.001;
 pub const CRITIC_LR: f64 = 0.002;
