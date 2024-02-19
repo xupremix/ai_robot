@@ -8,8 +8,8 @@ edition = "2021"
 [dependencies]
 robotics_lib = {version = "*", registry = "kellnr"}
 worldgen_unwrap = {version = "*", registry = "kellnr"}
+OwnerSheeps_Sound_Tool = { version = "*", registry = "kellnr" }
 ghost_journey_journal = { version="*", registry = "kellnr" }
-bob_lib = {version = "*", registry = "kellnr"}
 resource-scanner-tool = {version = "*", registry = "kellnr"}
 torch-sys = {path = "../../tch-rs/torch-sys"}
 tch = {path = "../../tch-rs"}

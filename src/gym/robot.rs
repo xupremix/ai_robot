@@ -16,6 +16,7 @@ use robotics_lib::runner::{Robot, Runnable};
 use robotics_lib::world::coordinates::Coordinate;
 use robotics_lib::world::tile::Content;
 use robotics_lib::world::World;
+use OwnerSheeps_Sound_Tool::functions::interface_sound::put_with_sound;
 
 use crate::gym::state::State;
 use crate::prelude::{
@@ -186,9 +187,14 @@ impl GymRobot {
                             if self.log {
                                 eprintln!("Put: {direction:?}");
                             }
-                            if let Ok(amt) = put(self, world, Content::Coin(0), amt, direction) {
+                            if let Ok(amt) =
+                                put_with_sound(self, world, Content::Coin(0), amt, direction)
+                            {
                                 self.coins_stored += amt;
                             }
+                            // if let Ok(amt) = put(self, world, Content::Coin(0), amt, direction) {
+                            //     self.coins_stored += amt;
+                            // }
                             return;
                         }
                         _ => {}
