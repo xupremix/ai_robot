@@ -10,13 +10,15 @@ use ghost_journey_journal::JourneyJournal;
 use rand::{thread_rng, Rng};
 use robotics_lib::energy::Energy;
 use robotics_lib::event::events::Event;
-use robotics_lib::interface::{one_direction_view, robot_view, Direction};
+use robotics_lib::interface::{destroy, go, one_direction_view, put, robot_view, Direction};
 use robotics_lib::runner::backpack::BackPack;
 use robotics_lib::runner::{Robot, Runnable};
 use robotics_lib::world::coordinates::Coordinate;
 use robotics_lib::world::tile::Content;
 use robotics_lib::world::World;
-use OwnerSheeps_Sound_Tool::functions::interface_sound::{destroy_with_sound, go_with_sound, put_with_sound};
+use OwnerSheeps_Sound_Tool::functions::interface_sound::{
+    destroy_with_sound, go_with_sound, put_with_sound,
+};
 
 use crate::gym::state::State;
 use crate::prelude::{
@@ -103,8 +105,8 @@ impl GymRobot {
         if self.log {
             eprintln!("Moving: {:?}", dir);
         }
-        if let Ok((surr, (robot_i, robot_j))) = go_with_sound(self, world, dir.clone()){
-        // if let Ok((surr, (robot_i, robot_j))) = go(self, world, dir.clone()) {
+        if let Ok((surr, (robot_i, robot_j))) = go_with_sound(self, world, dir.clone()) {
+            // if let Ok((surr, (robot_i, robot_j))) = go(self, world, dir.clone()) {
             match dir {
                 Direction::Up => {
                     for j in 0..3 {
@@ -413,7 +415,6 @@ impl Runnable for GymRobot {
     }
 
     fn handle_event(&mut self, event: Event) {
-
         self.state.borrow_mut().events.push(event);
     }
 
