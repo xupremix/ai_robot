@@ -8,22 +8,24 @@ use crate::gym::Gym;
 use crate::model::actor::Actor;
 use crate::model::critic::Critic;
 use crate::model::noise::Noise;
-use crate::prelude::{Agent, DEFAULT_MAP_PATH};
+use crate::prelude::Agent;
 use crate::robot::{Eval, FieldNotSet, FieldSet, Init, MlRobot, Train};
 
 impl<M> MlRobot<Init, FieldNotSet, M, bool, FieldNotSet> {
-    pub fn gen_map(
+    pub fn gen_map<S>(
         self,
+        map: S,
         coins_destroyed_goal: usize,
         coins_stored_goal: usize,
-    ) -> MlRobot<Init, FieldSet<String>, M, bool, Gym> {
-        let generator = WorldgeneratorUnwrap::init(true, None);
+    ) -> MlRobot<Init, FieldSet<S>, M, bool, Gym>
+    where
+        S: Into<PathBuf> + Copy,
+    {
+        let generator = WorldgeneratorUnwrap::init(true, Some(map.into()));
         let gym = Gym::new(self.log, generator, coins_destroyed_goal, coins_stored_goal);
         MlRobot {
             _state: PhantomData,
-            map: FieldSet {
-                data: DEFAULT_MAP_PATH.to_string(),
-            },
+            map: FieldSet { data: map },
             model: self.model,
             log: self.log,
             gym,
