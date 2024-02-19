@@ -1,5 +1,5 @@
-use tch::{Cuda, Tensor};
 use tch::kind::{FLOAT_CPU, FLOAT_CUDA, INT64_CPU, INT64_CUDA};
+use tch::{Cuda, Tensor};
 
 use crate::prelude::{ACTION_SPACE, MEM_DIM, OBSERVATION_SPACE};
 

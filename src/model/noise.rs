@@ -1,5 +1,5 @@
-use tch::{Cuda, Device, Kind, Tensor};
 use tch::kind::{FLOAT_CPU, FLOAT_CUDA};
+use tch::{Cuda, Device, Kind, Tensor};
 
 use crate::prelude::{ACTION_SPACE, MU, SIGMA, THETA};
 
